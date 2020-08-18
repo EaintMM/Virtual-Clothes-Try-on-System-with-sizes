@@ -12,11 +12,14 @@ CART=[]
 def checkOut():
     return render_template('checkout.html')
 
-@app.route('/tryon/<file_path>',methods = ['POST', 'GET'])
+@app.route('/tryon/<file_path>',methods=['POST','GET'])
 def tryon(file_path):
-	file_path = file_path.replace(',','/')
-	os.system('python tryOn.py ' + file_path)
-	return redirect('http://127.0.0.1:5000/',code=302, Response=None)
+    file_path = file_path.replace(',','/')
+    print("size is")
+    sz = request.form['sizes']
+    print(sz)
+    os.system('python tryOn.py ' + file_path + ' ' + sz)
+    return redirect('http://127.0.0.1:5000/',code=302, Response=None)
 
 @app.route('/tryall',methods = ['POST', 'GET'])
 def tryall():

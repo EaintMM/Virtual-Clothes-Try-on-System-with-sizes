@@ -40,7 +40,17 @@ def draw_sprite(frame, sprite, x_offset, y_offset):
             sprite[:,:,c] * (sprite[:,:,3]/255.0) +  frame[y_offset:y_offset+h, x_offset:x_offset+w, c] * (1.0 - sprite[:,:,3]/255.0)
     return frame
 
-def adjust_sprite2head(sprite, head_width, head_ypos, ontop = True):
+def adjust_sprite2head(sprite, head_width, head_ypos, sz, ontop = True):
+    # if(sz>0):
+    #     print('hee')
+    #     print('Original Dimensions : ',sprite.shape)
+    #     scale_percent = sz # percent of original size
+    #     width = int(sprite.shape[1] * scale_percent / 100)
+    #     height = int(sprite.shape[0] * scale_percent / 100)
+    #     dim = (width, height)
+    #     # resize image
+    #     sprite = cv2.resize(sprite, dim, interpolation = cv2.INTER_AREA)
+    #     print('Resized Dimensions : ',sprite.shape) 
     (h_sprite,w_sprite) = (sprite.shape[0], sprite.shape[1])
     #print("heigth")
     #print(h_sprite )
@@ -49,7 +59,7 @@ def adjust_sprite2head(sprite, head_width, head_ypos, ontop = True):
     #print("increase w is " , w_sprite)
     #factor = 1.25*head_width/w_sprite  this one
     #factor = (1.0*head_width/w_sprite)
-    factor = head_width/ w_sprite
+    factor = 1.0*head_width/ w_sprite
     sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
     (h_sprite,w_sprite) = (sprite.shape[0], sprite.shape[1])
     y_orig = head_ypos
@@ -64,14 +74,14 @@ def adjust_sprite2head(sprite, head_width, head_ypos, ontop = True):
 def apply_sprite(image, path2sprite,w,x,y, angle, ontop = True):
     sprite = cv2.imread(path2sprite,-1)
     #sprite = rotate_bound(sprite, angle)
-    (sprite, y_final) = adjust_sprite2head(sprite, w, y, ontop)
+    (sprite, y_final) = adjust_sprite2head(sprite, w, y, angle, ontop)
     #y_final = y
             #x= x-10
     #x = x-int(0.31*x)
     #x = x-int((10/13)*x)
     #x = x-int((10/13)*w)
     #x = x - int((0.125) *w) This one
-    y_final = y_final - int((w/2)/4)
+    y_final = y_final - int((w/2)/3)
     image = draw_sprite(image,sprite,x, y_final)
 
 def calculate_inclination(point1, point2):
@@ -124,6 +134,8 @@ def cvloop(run_event):
     global SPRITES
     global image_path
     global video_capture
+    global sz
+    global root
     i = 0
     video_capture = cv2.VideoCapture(0) #read from webcam
     # print("FPS1 is ")
@@ -150,18 +162,60 @@ def cvloop(run_event):
         for face in faces: 
             (x,y,w,h) = (face[0], face[1], face[2], face[3])
             #nh = int(1/8 * h)
-            nnh = int(1/6*h)
+            nnh = int(1/6*h) #for full head of bounding box size
             y = y-nnh
-            cv2.rectangle(image, (x, y), (x+w, y+h+nnh), (255, 0, 0), 2)
+            #cv2.rectangle(image, (x, y), (x+w, y+h+nnh), (255, 0, 0), 2)
             
-            # necklace and it is correct, but i change it for top
+            # wedding dresses
+            if SPRITES[2]:
+                h = h  + nnh + 38
+                h =int(h + sz) 
+                
+                xCent = x+ (0.5 * w)
+                ySh = y+(h*(4/3)) -38 - sz
+                ySh = int(ySh)
+                hn = 6*h
+                hw = h + 150
+                xSh = xCent - hw
+                xSh = int(xSh)
+                wn = int(2*hw)
+                
+                #cv2.rectangle(image, (xSh, ySh), (xSh+wn, ySh+hn), (0, 0, 255), 2)
+                apply_sprite(image,image_path,wn,xSh,ySh, sz,0)
+            
+            # Frocks or mini dresses
             if SPRITES[1]:
-                #(x1,y1,w1,h1) = get_face_boundbox(shape, 6)
-                #apply_sprite(image,image_path,w1,x1,y1+275, incl)
-                cv2.rectangle(image, (x1, y1), (x1+w1, y1+h1), (0, 255, 0), 2)
-                wn = int(1.4 * w1)
-                yn = int (y1+(6.5*h1))
-                apply_sprite(image,image_path,3.5*w1,x1-wn,yn, 0)
+                h = h  + nnh + 38
+                h =int(h + sz) 
+                
+                xCent = x+ (0.5 * w)
+                ySh = y+(h*(4/3)) -38 - sz
+                ySh = int(ySh)
+                hn = 6*h
+                hw = h + 76
+                xSh = xCent - hw
+                xSh = int(xSh)
+                wn = int(2*hw)
+                
+                #cv2.rectangle(image, (xSh, ySh), (xSh+wn, ySh+hn), (0, 0, 255), 2)
+                apply_sprite(image,image_path,wn,xSh,ySh, sz,0)
+            # men wears
+            if SPRITES[6]:
+                
+                h = h  + nnh + 38
+                h =int(h + sz) 
+                
+                xCent = x+ (0.5 * w)
+                xSh = xCent - h
+                
+                ySh = y+(h*(4/3)) -38 - sz
+                xSh = int(xSh)
+                ySh = int(ySh)
+                
+                wn = int(2*h)
+                hn = 6*h
+                #cv2.rectangle(image, (xSh, ySh), (xSh+wn, ySh+hn), (0, 0, 255), 2)
+                apply_sprite(image,image_path,wn,xSh,ySh, sz,0)
             
              # clone from above and lote chin yar lote yan for top
              # at first i take the jaws points , x1,y1,w1,h1 , but now is with face points
@@ -171,6 +225,7 @@ def cvloop(run_event):
                 #apply_sprite(image,image_path,w1,x1,y1+275, incl)
                 #h1 = h +nnh
                 h = h  + nnh + 38
+                h =int(h + sz) 
                 #h = h+ nnh +nnh
                 #y = y-(2*nnh)
                 xCent = x+ (0.5 * w)
@@ -178,40 +233,57 @@ def cvloop(run_event):
                 xSh = xCent - h
                 #ySh = y1 + ((1.5)*h1)
                 #ySh = y+(h1*(4/3)) -nnh
-                ySh = y+(h*(4/3)) -38
+                ySh = y+(h*(4/3)) -38 - sz
                 xSh = int(xSh)
                 ySh = int(ySh)
                 #cv2.rectangle(image, (x1, y1), (x1+w1, y1+h1), (0, 255, 0), 2)
                 #wn = int(2* (xCent - xSh))
                 wn = int(2*h)
                 hn = 6*h
-                cv2.rectangle(image, (xSh, ySh), (xSh+wn, ySh+hn), (0, 0, 255), 2)
-                apply_sprite(image,image_path,wn,xSh,ySh, 0)
+                #cv2.rectangle(image, (xSh, ySh), (xSh+wn, ySh+hn), (0, 0, 255), 2)
+                apply_sprite(image,image_path,wn,xSh,ySh, sz,0)
 
             
 
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = Image.fromarray(image)
+        # getting screen's height in pixels 
+        #height = panelA.winfo_screenheight() 
+        # getting screen's width in pixels 
+        #width = panelA.winfo_screenwidth() 
+        #image = image.resize((width-100, height-300))
+        
+        # resize image
+        #scale_percent = 220 # percent of original size
+       # width = int(image.shape[1] * scale_percent / 100)
+        #height = int(image.shape[0] * scale_percent / 100)
+        #dim = (width, height)
+        #image = cv2.resize(image, dim, interpolation = cv2.INTER_AREA) 
         image = ImageTk.PhotoImage(image)
         panelA.configure(image=image)
         panelA.image = image
+        panelA.pack(fill=BOTH,expand=YES)
     video_capture.release()
 
 # Initialize GUI object
 root = Tk()
 root.title("Virtual Try On")
+
 # os.path.realpath(__file__) = F:\University Student Lay\6th year\Thesis\Code\Virtual Try On System\tryOn.py
 # os.path.dirname(os.path.realpath(__file__)) = F:\University Student Lay\6th year\Thesis\Code\Virtual Try On System
 this_dir = os.path.dirname(os.path.realpath(__file__))
+sz = float(sys.argv[2])
+print("hi size is")
+print(sz)
 btn1 = None
 
 def try_on(image_path):
     btn1 = Button(root, text="Try It On!", command = lambda:add_sprite(image_path))
-    btn1.pack(side="top", fill="both", expand="no", padx="5", pady="5")
+    btn1.pack(side="bottom", fill="both", expand="no", padx="5", pady="5")
     
 
 panelA = Label(root)
-panelA.pack( padx=10, pady=10)
+panelA.pack(fill=BOTH,expand=YES, padx=10, pady=10)
 
 SPRITES = [0,0,0,0,0,0,0]
 BTNS = [btn1]
