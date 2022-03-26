@@ -19,3 +19,4 @@ Finally, one of the image compositing techniques called alpha blending is applie
 <li>Haar-features based face detection </li>
 <li> Image compositing techniques, alpha blending </li>
 <li> Flask framework for web  </li>
+<li> Tkinter for Window UI </li>
